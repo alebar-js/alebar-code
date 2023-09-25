@@ -1,0 +1,125 @@
+---
+title: Group array of objects by key in Typescript - Typescript GroupBy
+date: '2023-09-01'
+tags: ['typescript', 'code', 'array']
+draft: false
+summary: Creating a function to group array elements by a single key using Typescript and Generics
+---
+
+## The Problem
+
+At the client level, often times data is received from APIs as an array that needs to be further divided into categories.
+
+Here's an example that may seem familiar to anyone learning modern Front-End development:
+
+```json:Task
+{
+    "id": "task::xxx01",
+    "user": "Alejandro",
+    "userId": "user::xxxxxxxxxxxx01"
+    "state": "IN_PROGRESS"
+}
+
+```
+
+The requirements are to receive these tasks from an API and create a To-Do list, Trello board, or any other
+visual abstraction. These requirements usually call for the tasks to be displayed by
+categories--different columns, or sections for each status (in progress, done, not started, etc).
+
+## Naive solution - just group by task.state!
+
+Since we know the schema of the objects we will be handling, we can simply create a
+`groupTasksByState` helper that will do the trick.
+
+```ts:helpers.ts
+export function groupTasksByState(tasks: Task[]) {
+  let res: { [k: string]: Task[] } = {}
+  tasks.forEach((task) => {
+    if (res[task.state]) res[task.state].push(task)
+    else res[task.state] = [task]
+  })
+  return res
+}
+```
+
+This works. But **only** for this specific Task schema and this specific `state` attribute.
+What if the schema changes later? We have the additional side effect of checking this helper function,
+which probably resides in a utility folder, easy to overlook.
+
+But, worse, what if we need to group a _completely different_ object schema? By a different key?
+Maybe we have `Car` objects that could be grouped by both `Make` and `Year`. We find ourselves
+creating 3 or more functions that, in practice, do the exact same thing. So how do we make a generic one?
+
+**We use Type Generics**
+
+## What is the end goal?
+
+First, let's look at what we are trying to achieve, using Javascript first. The syntax for generic
+functions can be a bit overwhelming.
+
+```js:helpers.ts
+export function groupBy(arr, key) {
+    let res = {}
+    arr.forEach(item => {
+        let curr = item[key]
+        if (!res[curr]) res[curr] = []
+        res[curr].push(item)
+    })
+    return res
+}
+```
+
+We now take the additional `key` parameter, to make the function work for any object array
+we pass, and group them by the given key.
+
+## Make it Typescript!
+
+Naturally, we are not satisfied with the function above because it is not type safe, and
+we can run into errors when misusing it since we won't have much intellisense for it.
+
+We can use type generics for this, which will make it a bit more wordy but a **lot** more
+readable, maintainable, and reusable. Let's refactor the function and add generic types
+
+```ts
+export function groupBy<T>(arr: T[], key: keyof T): Record<string, T[]> {
+  const res: Record<string, T[]> = {}
+
+  arr.forEach((item) => {
+    let curr = item[key] as string // type assertion, to access Record above
+    if (!res[curr]) res[curr] = []
+    res[curr].push(item)
+  })
+
+  return res
+}
+```
+
+Now the Typescript compiler knows that, when using this function, parameters are the array
+`arr` which will be of any type T (generic identifier, sort of like a variable X in math),
+and `key` which **must** be a key of that same type, T.
+
+### Usage
+
+You may have noticed we tweaked the return type of our groupBy function a little. It
+now explicitly returns a `Record<string, T[]>` which means we have to ensure that the variable
+where we store the result is of that type. Since our function is generic, this means that
+we have to create a new type for each different object type we want to group.
+
+It looks like this
+
+```ts:taskList.tsx
+type GroupedTasks = Record<string, Task[]>
+
+const [tasks, setTasks] = useState()
+
+useEffect(() => {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(res => setTasks(groupBy(res.tasks, "state")))
+}, [])
+```
+
+With this implementation we have a working, type-safe `groupBy` function to use with our
+API calls!
+
+Feel free to look through the rest of the blog if you enjoyed this post or found it helpful. Happy coding!
