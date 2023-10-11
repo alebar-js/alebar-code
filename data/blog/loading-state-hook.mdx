@@ -1,0 +1,127 @@
+---
+title: Handling Loading states using React Hooks - Typescript useLoading
+date: '2023-10-09'
+tags: ['typescript', 'code', 'Hooks', 'react']
+draft: false
+summary: Let's make a generic, reusable useLoading hook for our async functions
+---
+
+## The four "states" of data-handling components
+
+Our React component often fetch data from external APIs, using asynchronous
+
+- **Empty state**: often overlooked, happens when data fetch was successful,
+  but the content returned was empty. This happens with intended behavior
+  such as empty search results, posts with no comments yet, etc.
+
+- **Error state**: one or more errors were found when fetching data. Unlike the empty state,
+  this is unintended behavior and as such we want to display an error message to the user
+
+- **Content state**: fetch was successful, and data was retrieved. Normally this is the first
+  behavior state that comes to mind, so not much is there to be said here.
+
+- **Loading state**: the fetch function / callback was triggered, but it has not yet finished.
+  Depending on the user's connection, server load or client operations performed, this can be
+  anything from milliseconds to a couple of seconds. We'll talk about how to handle this state
+
+## Loading State - what we need to know
+
+All of the states we discussed, other than Loading, happen once data has been
+fetched, and don't change until some other action triggers a change in their data
+sources.
+
+Loading is a bit trickier, because it is a transient state. In most cases, our
+components will be loading for a finite amount of time, after which it will switch
+to one of the other three major states.
+
+Luckily, in JavaScript/Typescript, we have the Promise interface that allows us to
+call functions before and after the Promise has been filled. This way, we can track
+our Loading state by setting a React.useState variable when the promise begins executing,
+and unsetting it when the promise finishes. It would look similar to this:
+
+```ts:ToDoList.tsx
+const ToDoList = (props): ToDoListProps => {
+    const [loading, setLoading] = useState(false)   // loading state variable
+    const [errors, setErrors] = useState<ErrorMessage[]>()
+    const [data, setData] = useState<ToDo[] | undefined>()
+    useEffect(() => {
+        setLoading(true)    // set loading, start api call
+        fetch(API_URL)
+            .then((res) => {
+                setData(res.data)
+            })
+            .catch((err) => setErrors(err))
+            .finally(() => setLoading(false))   // after api call, unset loading
+    }, [])
+}
+```
+
+In this example, we have a component that handles an API call to fetch `ToDo` items
+from an external service. We handle the loading state its own useState variable, and
+manually set it / unset it when we start and finish fetching.
+
+However, in a real world application we are often fetching data in many different places,
+and sometimes even more than one different type of fetch per component, which would have us
+repeat this code multiple times.
+
+## Abstracting the logic to a reusable Hook
+
+We've been taught that in clean code, you **D.R.Y -- Don't Repeat Yourself**. Using hooks and
+higher-order functions we can create a custom `useLoading` hook that can return a loading
+state and an action trigger for any function we want, as long as it returns a promise.
+
+```ts:useLoading.ts
+const useLoading = <T extends (...args: any[]) => Promise<any>>(action: T) => {
+  const [loading, setLoading] = useState(false)     // loading state - returned by function
+
+  const doAction = (...args: Parameters<T>) => {    // action trigger, returned as well
+    setLoading(true)
+    return action(...args).finally(() => setLoading(false))
+  }
+
+  return [doAction, loading] as const
+}
+
+export default useLoading
+```
+
+In here we have abstracted the logic of setting and unsetting state to this useLoading hook,
+and return `[doAction, loading]` as the function trigger, and the reference to the loading
+state. The inner function `doAction` will set and unset the loading state before and after
+triggering the function, and returns the action itself so that it can be triggered
+
+## Usage scenario
+
+Let's see our useLoading hook in action, consuming it in our example `ToDoList` from above:
+
+```ts:ToDoList.tsx
+const fetchData = (url: string): Promise<any> => {
+    return fetch(url)
+        .then(res => res.json())
+        .catch(err => console.error(err))
+}
+
+const ToDoList = (props): ToDoListProps => {
+    const [doFetch, loading] = useLoading(fetchData)
+    const [data, setData] = useState<ToDo[]>()
+
+    const fetchDataFromApi = () => {
+        doFetch(API_URL)
+            .then((data) => setData(data))
+            .catch(err => console.error(err))
+    }
+
+    useEffect(() => {
+        fetchDataFromApi()
+    }, [])
+
+    return <>
+        {data.map((todo) => <ToDo {...todo} />)}
+}
+```
+
+Additionally, we can extract the `fetchData` function to an external file to make our `.tsx`
+files have the least code possible, and keep the boilerplate-ish code related to data fetching
+in `.ts` files.
+
+Hope you found this useful, and feel free to browse around the blog. Happy coding!

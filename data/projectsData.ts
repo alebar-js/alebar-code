@@ -1,19 +1,17 @@
 const projectsData = [
   {
-    title: 'A Search Engine',
-    description: `What if you could look up any information in the world? Webpages, images, videos
-    and more. Google has many features to help you find exactly what you're looking
-    for.`,
-    imgSrc: '/static/images/google.png',
-    href: 'https://www.google.com',
+    title: 'Portfolio Website',
+    description: `Showcasing my front-end development skills with a customized portfolio website
+    with some animations that I thought turned out pretty cool!`,
+    imgSrc: '/static/images/portfolio.png',
+    href: 'https://alebar-js.vercel.app',
   },
   {
-    title: 'The Time Machine',
-    description: `Imagine being able to travel back in time or to the future. Simple turn the knob
-    to the desired date and press "Go". No more worrying about lost keys or
-    forgotten headphones with this simple yet affordable solution.`,
-    imgSrc: '/static/images/time-machine.jpg',
-    href: '/blog/the-time-machine',
+    title: 'Wrapp3D',
+    description: `Your Spotify Wrapped -- in 3D! At least that was the goal initially. Died due
+    to limitations in the Spotify API, still had fun making it and using 3D animations`,
+    imgSrc: '/static/images/wrapp3d.png',
+    href: 'https://wrapp3d.vercel.app',
   },
 ]
 

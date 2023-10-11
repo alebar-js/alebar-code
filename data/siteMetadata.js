@@ -1,18 +1,18 @@
 /** @type {import("pliny/config").PlinyConfig } */
 const siteMetadata = {
   title: 'Alebar Snippets',
-  author: 'Tails Azimuth',
-  headerTitle: 'AlebarSnippets',
+  author: 'Alejandro Barnola',
+  headerTitle: '<AlebarSnippets />',
   description: 'A blog created with Next.js and Tailwind.css',
   language: 'en-us',
   theme: 'system', // system, dark or light
   siteUrl: 'https://tailwind-nextjs-starter-blog.vercel.app',
   siteRepo: 'https://github.com/alebar-js',
-  siteLogo: '/static/images/logo.png',
+  siteLogo: '/static/images/logo-white.png',
   socialBanner: '/static/images/twitter-card.png',
   email: 'alebarnola96@gmail.com',
   github: 'https://github.com/alebar-js',
-  facebook: 'https://facebook.com',
+  // facebook: 'https://facebook.com',
   linkedin: 'https://www.linkedin.com/in/alejandro-barnola',
   locale: 'en-US',
   analytics: {
@@ -34,11 +34,11 @@ const siteMetadata = {
     //   googleAnalyticsId: '', // e.g. G-XXXXXXX
     // },
   },
-  newsletter: {
-    // supports mailchimp, buttondown, convertkit, klaviyo, revue, emailoctopus
-    // Please add your .env file and modify it according to your selection
-    provider: 'buttondown',
-  },
+  // newsletter: {
+  //   // supports mailchimp, buttondown, convertkit, klaviyo, revue, emailoctopus
+  //   // Please add your .env file and modify it according to your selection
+  //   provider: 'buttondown',
+  // },
   comments: {
     // If you want to use an analytics provider you have to add it to the
     // content security policy in the `next.config.js` file.
